@@ -2,28 +2,69 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Post;
+use Illuminate\Http\Request;
 
-class postcontroller extends Controller
+class PostController extends Controller
 {
-    //
+    // Read: list all
     public function index()
     {
-        $posts = Post::all();
+        $posts = Post::latest()->get();
         return view('posts.index', compact('posts'));
     }
+
+    // Show the create form
     public function create()
     {
         return view('posts.create');
     }
+
+    // Create: save new post
     public function store(Request $request)
     {
-        Post::create([
-            'title' => $request->title,
-            'body' => $request->body,
+        $data = $request->validate([
+            'title' => 'required|max:255',
+            'body'  => 'required',
         ]);
 
+        Post::create($data);
+
+        return redirect()->route('posts.index');
+    }
+
+    // Read: one post
+    public function show(int $id)
+    {
+        $post = Post::findOrFail($id);
+        return view('posts.show', compact('post'));
+    }
+
+    // Show the edit form
+    public function edit(int $id)
+    {
+        $post = Post::findOrFail($id);
+        return view('posts.edit', compact('post'));
+    }
+
+    // Update: save changes
+    public function update(Request $request, int $id)
+    {
+        $data = $request->validate([
+            'title' => 'required|max:255',
+            'body'  => 'required',
+        ]);
+
+        $post = Post::findOrFail($id);
+        $post->update($data);
+
+        return redirect()->route('posts.show', $post->id);
+    }
+
+    // Delete
+    public function destroy(int $id)
+    {
+        Post::findOrFail($id)->delete();
         return redirect()->route('posts.index');
     }
 }
